@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import numpy as np
 import dateutil.parser
+from io import StringIO
 
 
 class Preprocess:
@@ -11,16 +12,14 @@ class Preprocess:
     GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_train_round1.csv'
     DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-SCH-Tables/' 
 
-    
 
     def __init__(self):
         self.get_domains()
         print("Domains extraction completed")
         self.get_types()
         print("Types extraction completed")
-
-
-
+        self.get_coappearance()
+        print("Coappearance extraction completed")
 
 
     def get_types(self):
@@ -70,7 +69,6 @@ class Preprocess:
 
 
 
-
     def get_domains(self):
         df1 = pd.read_csv(self.GT_PATH1)
         df2 = pd.read_csv(self.GT_PATH2)
@@ -89,6 +87,38 @@ class Preprocess:
 
         self.write_to_file()
 
+
+
+    def get_coappearance(self):
+        df = pd.read_csv(self.GT_PATH1)
+        with open('data/dict.json', 'r') as file:
+            data = json.load(file)
+        data = {key: {item: [] for item in value} for key, value in data.items()}
+
+        grouped = df.groupby('table_name')
+        for table_name, group in grouped:
+            type = table_name.split('_')[0]
+            labels = group["label"].tolist()
+            for i in range(len(labels)):
+                label = labels[i]
+                new_labels = labels[:i] + labels[i+1:]
+                for j in range(len(new_labels)):
+                    data[type][label].append(new_labels[j])
+        
+        cleaned_data = self.remove_duplicates_from_dict(data)
+
+        file_path = 'data/coappearance.json'
+        with open(file_path, 'w') as f:
+            json.dump(cleaned_data, f, indent=4)
+
+
+    def remove_duplicates_from_dict(self, data):
+        for category, attributes in data.items():
+            for attribute, values in attributes.items():
+                # Remove duplicates while preserving order
+                data[category][attribute] = list(dict.fromkeys(values))
+        return data
+    
 
     def get_initial_list(self, df1):
         nameList = []

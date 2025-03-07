@@ -8,7 +8,11 @@ import re
 
 #"qwen2.5:14b"
 model = "qwen2.5:14b"
-def llm(index, gt, domains, types, rels):
+def llm(index, gt, domains, types, coapperances , rels):
+    llm_gt = gt 
+    used = []
+    first_name = gt['table_name'][0]
+    first_iter = True
 
 
 
@@ -32,6 +36,9 @@ def llm(index, gt, domains, types, rels):
 
         #domains && types
         rels = dom_types(table,domain,domains,num,types)
+        if not first_iter:
+            rels = get_coappearance(first_iter,used,coapperances,domain,rels)
+        
 
         table = table.to_json(orient="records")
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
@@ -58,10 +65,19 @@ def llm(index, gt, domains, types, rels):
             tr +=1
         if res not in rels:
             print("---res out", res)
+        
+        if first_name == table_name:
+            first_iter = False
+            if res in rels:
+                used.append(res)
+        else:
+            first_name = table_name
+            first_iter = True
+            used.clear()
             
 
         #print(res)
-        llm_gt = gt 
+        
         llm_gt.loc[i, 'label'] = res
     llm_csv(llm_gt)
 
@@ -102,6 +118,34 @@ def get_type(table,num):
             type = "string"
     #print(f"type {type}, element {element}")
     return type
+
+
+def get_coappearance(first_iter,used,coapperances,domain,rels):
+    #remove already chooses relations
+    # print("-rels",rels)
+    # print("--used",used)
+    new_rels = [item for item in rels if item not in used]
+    #print("---newrels",new_rels)
+    rels = new_rels
+
+    #coappearance 
+    if len(used) != 0: 
+        first_item =  used[0]
+        try:
+            coapp = coapperances[domain][first_item]
+        except KeyError:
+            coapp = rels
+        # print("-coapp",coapp)
+        # print("--rels",rels)
+
+        intersection = list(set(rels).intersection(set(coapp)))
+
+        # print("---intersection",intersection)
+        rels = intersection
+    return rels
+
+
+
 
 model_structuring = 'qwen2:7b'
 def llm_structuring(res):

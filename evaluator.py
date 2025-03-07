@@ -21,6 +21,11 @@ class SOTAB_Evaluator:
 
         gt = pd.read_csv(self.ground_truth_filepath)
 
+        #sort approprietely 
+        gt['table_name'] = pd.Categorical(gt['table_name'], categories=gt['table_name'].unique(), ordered=True)
+        gt_sorted = gt.sort_values(by=['table_name', 'column_index'])
+        gt = gt_sorted
+
         gt_labels = gt['label'].tolist()
 
         submission = pd.read_csv(self.submission_filepath)

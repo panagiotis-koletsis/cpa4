@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import csv
+import json
 #from eval import process
 from evaluator import SOTAB_Evaluator
 #from eval import calculate_metrics
@@ -37,11 +38,15 @@ def read_datasets():
 def read_gt():
     file_path = GT_PATH
     gt = pd.read_csv(file_path)
-    return gt 
+
+    #sort approprietely 
+    gt['table_name'] = pd.Categorical(gt['table_name'], categories=gt['table_name'].unique(), ordered=True)
+    gt_sorted = gt.sort_values(by=['table_name', 'column_index'])
+    gt = gt_sorted
+
+    return gt
 
 def relations_domain():
-    import json
-
     # Open and load JSON from a file
     with open("data/dict.json", "r") as file:
         data = json.load(file)  # Use json.load() for file
@@ -50,13 +55,16 @@ def relations_domain():
     return data
 
 def relations_types():
-    import json
-
     # Open and load JSON from a file
     with open("data/dict1.json", "r") as file:
         data = json.load(file)  # Use json.load() for file
 
     # Print the loaded data
+    return data
+
+def relations_coappearance():
+    with open("data/coappearance.json", "r") as file:
+        data = json.load(file)  # Use json.load() for file
     return data
 
 def llm_csv(gt):

@@ -1,4 +1,4 @@
-from files import read_datasets, read_gt, relations_domain, relations_types , llm_csv, relations_file, eval
+from files import read_datasets, read_gt, relations_domain, relations_types , llm_csv, relations_file, eval, relations_coappearance
 from llm import llm
 from evaluator import SOTAB_Evaluator
 import time
@@ -15,6 +15,7 @@ def main():
     # print(len(gt))
     domains = relations_domain()
     types = relations_types()
+    coapperance = relations_coappearance()
     # print(len(domains))
     # print(len(types))
 
@@ -24,7 +25,7 @@ def main():
 
 
     rels = relations_file()
-    llm(index, gt, domains, types,rels)
+    llm(index, gt, domains, types, coapperance ,rels)
 
     eval()
 
