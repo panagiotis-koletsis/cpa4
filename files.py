@@ -9,10 +9,10 @@ from evaluator import SOTAB_Evaluator
 
 #These needs to be changed
 DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-SCH-Tables/'  
-#GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_validation_round1.csv'
+GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_validation_round1.csv'
 RELATIONS_FILE = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/cpa_labels_round1.txt'
 #GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/random.csv'
-GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_test_round1.csv'
+#GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_test_round1.csv'
 
 
 

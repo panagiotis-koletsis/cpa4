@@ -6,7 +6,7 @@ import numpy as np
 import dateutil.parser
 import re
 
-#"qwen2.5:14b"
+#"qwen2.5:14b"   "qwen2.5:32b-instruct-q3_K_L"
 model = "qwen2.5:14b"
 def llm(index, gt, domains, types, coapperances , rels):
     llm_gt = gt 
@@ -36,9 +36,12 @@ def llm(index, gt, domains, types, coapperances , rels):
 
         #domains && types
         rels = dom_types(table,domain,domains,num,types)
+        #initial_rels = rels
         if not first_iter:
             rels = get_coappearance(first_iter,used,coapperances,domain,rels)
         
+        if len(rels) == 1:
+            print("Only 1 relation")
 
         table = table.to_json(orient="records")
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
@@ -50,6 +53,8 @@ def llm(index, gt, domains, types, coapperances , rels):
         #print(prompt)
         llm = OllamaLLM(model=model)
         res = f"""{llm.invoke(prompt)}"""
+
+        res = res.replace(" ", "")
 
         if model == 'deepseek-r1:14b':
             res = re.sub(r"<think>.*?</think>\s*", "", res, flags=re.DOTALL)
