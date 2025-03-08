@@ -7,7 +7,7 @@ import dateutil.parser
 import re
 
 #"qwen2.5:14b"   "qwen2.5:32b-instruct-q3_K_L"
-model = "qwen2.5:14b"
+model = "qwen2.5:32b-instruct-q3_K_L"
 def llm(index, gt, domains, types, coapperances , rels):
     llm_gt = gt 
     used = []
@@ -37,8 +37,8 @@ def llm(index, gt, domains, types, coapperances , rels):
         #domains && types
         rels = dom_types(table,domain,domains,num,types)
         #initial_rels = rels
-        if not first_iter:
-            rels = get_coappearance(first_iter,used,coapperances,domain,rels)
+        # if not first_iter:
+        #     rels = get_coappearance(first_iter,used,coapperances,domain,rels)
         
         if len(rels) == 1:
             print("Only 1 relation")
