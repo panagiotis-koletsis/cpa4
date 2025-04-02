@@ -30,6 +30,7 @@ class Preprocess:
             col = df['column_index'][i]
             table_name = df['table_name'][i]
 
+
             #read table 
             path = self.DATASET_PATH+table_name
             table_df = pd.read_json(path, compression='gzip', lines=True)
@@ -41,17 +42,78 @@ class Preprocess:
 
                     if isinstance(table_df[j][k], list):  # Correct way to check type
                         table_df.at[k, j] = table_df.at[k, j][0]
+            #here we take the 1st element
+            # number_type = 0
+            # date_type = 0
+            # string_type = 0
+            # for i in range(3):
+            #     if isinstance(table_df[col][i], (np.int64,np.float64)):  # Correct way to check type
+            #         number_type += 1
+            #         typesList[label].append('int/float')   
+            #     elif isinstance(table_df[col][i], str):  # Correct way to check type     
+            #         try:
+            #             date = dateutil.parser.parse(table_df[col][i])  # Invalid date string
+            #             date_type += 1
+            #             typesList[label].append('date')
+            #         except (ValueError, OverflowError) as e:
+            #             string_type += 1
+            #             typesList[label].append('string')
+            # print("number_type",number_type)
+            # print("date_type",date_type)
+            # print("string_type",string_type)
+
+   
+
             if isinstance(table_df[col][0], (np.int64,np.float64)):  # Correct way to check type
                 typesList[label].append('int/float')   
             elif isinstance(table_df[col][0], str):  # Correct way to check type     
                 try:
                     date = dateutil.parser.parse(table_df[col][0])  # Invalid date string
+                    #print(table_df[col][0])
                     typesList[label].append('date')
                 except (ValueError, OverflowError) as e:
                     typesList[label].append('string')
 
+
+        # for key in typesList:
+        #     typesList[key] = list(set(typesList[key]))
+
+
+        #this is for type clearing
         for key in typesList:
-            typesList[key] = list(set(typesList[key]))
+            typesList[key] = {t: typesList[key].count(t) for t in set(typesList[key])}
+        print(typesList)
+
+
+        
+        for key, value in typesList.items():
+            print(value)
+            for sub_key,sub_value in value.items():
+                max_value = max(value.values(), default=-1)
+                # max = -1
+                # if sub_value > max:
+                #     max = sub_value
+            print("-",max_value)
+            threshold = 10/100*max_value
+            print(threshold)
+            keys_to_remove = []
+            for sub_key,sub_value in value.items():
+                if sub_value < threshold:
+                    keys_to_remove.append(sub_key)
+            for sub_key in keys_to_remove:
+                value.pop(sub_key, None)
+                print("------",value)
+
+        print(typesList)
+
+                
+
+
+        
+        
+        #print()
+
+        
 
         inverted_data = {}
 
@@ -61,6 +123,15 @@ class Preprocess:
                     inverted_data[value] = []
                 inverted_data[value].append(key)
 
+        #This is for type clearing
+        # for key, value_dict in typesList.items():
+        #     for value, count in value_dict.items():
+        #         if value not in inverted_data:
+        #             inverted_data[value] = []
+        #         inverted_data[value].append({key: count})
+        # print(inverted_data)
+
+        
         # saving
 
         file_path = 'data/dict1.json'
@@ -132,6 +203,7 @@ class Preprocess:
         file_path = 'data/dict.json'
         with open(file_path, 'w') as f:
             json.dump(self.dict, f, indent=4)
+
 
 
 def main():

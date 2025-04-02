@@ -27,6 +27,12 @@ def llm(index, gt, domains, types, coapperances , rels):
         # print(domain)
         # print(table_name)
         # print(index[table_name])
+
+
+        #cta = gt['labelcol'][i]
+
+
+
         table = index[table_name]
         if len(table) > 500:
             table = table.iloc[:500]
@@ -37,11 +43,12 @@ def llm(index, gt, domains, types, coapperances , rels):
         #domains && types
         rels = dom_types(table,domain,domains,num,types)
         #initial_rels = rels
-        # if not first_iter:
-        #     rels = get_coappearance(first_iter,used,coapperances,domain,rels)
+        if not first_iter:
+            rels = get_coappearance(first_iter,used,coapperances,domain,rels)
         
         if len(rels) == 1:
             print("Only 1 relation")
+            #res = rels
 
         table = table.to_json(orient="records")
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
@@ -49,6 +56,9 @@ def llm(index, gt, domains, types, coapperances , rels):
         #print(f"Domain: {domain}, Num: {num}, Table: {table}, Relations: {rels}")
 
         #domain=domain,num=num,table=table,relations=rels
+
+        #,cta=cta
+
         prompt = prompt_template.format(domain=domain,num=num,table=table,relations=rels)
         #print(prompt)
         llm = OllamaLLM(model=model)

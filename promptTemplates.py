@@ -1,3 +1,4 @@
+# knowing that the col {num} has type {cta}
 PROMPT_TEMPLATE = """
     ----
     Knowing that this table is about {domain}
@@ -5,7 +6,7 @@ PROMPT_TEMPLATE = """
     {table}
     ----
     On the provided table i want you to answer this question: 
-    What is the relation between column 0 and column {num}
+    What is the relation between column 0 and column {num}. 
     ----
     ***All the possible relations are in this list {relations}.
     Examine all the possible provided relations and keep the most suitable one!
@@ -31,7 +32,7 @@ PROMPT_TEMPLATE = """
     3. Identify the most suitable relation from the relation list
     
 
-    Provide only the desired output (1 word) and nothing more! Dont explain yourself and dont provide extra comments! 
+    Provide only the desired output (1 word) and nothing more! Dont explain yourself and dont provide extra comments!
     ----
 
 """
