@@ -3,14 +3,27 @@ import json
 import numpy as np
 import dateutil.parser
 from io import StringIO
+from urllib.parse import urlparse
 
 
 class Preprocess:
-    GT_PATH1 = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_train_round1.csv'
-    GT_PATH2 = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_validation_round1.csv'
 
-    GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_train_round1.csv'
-    DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-SCH-Tables/' 
+    #For R2 Dataset 
+    DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/R2/SOTAB-2023-R2-CPA/Round2-SOTAB-CPA-Tables/'
+    GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/R2/SOTAB-2023-R2-CPA/sotab_cpa_train_round2.csv'
+
+    GT_PATH1 = '/home/kpanag/Desktop/cpa3/cpa/R2/SOTAB-2023-R2-CPA/sotab_cpa_train_round2.csv'
+    GT_PATH2 = '/home/kpanag/Desktop/cpa3/cpa/R2/SOTAB-2023-R2-CPA/sotab_cpa_validation_round2.csv'
+
+
+    # For R1 Dataset
+    # GT_PATH1 = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_train_round1.csv'
+    # GT_PATH2 = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_validation_round1.csv'
+
+    # GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_train_round1.csv'
+    # DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-SCH-Tables/' 
+
+    droptype_percent = 10
 
 
     def __init__(self):
@@ -39,31 +52,78 @@ class Preprocess:
             for j in range(table_df.shape[1]):
                 for k in range(len(table_df[j])):
 
-
+                    #print(type(table_df[j][k]))
                     if isinstance(table_df[j][k], list):  # Correct way to check type
                         table_df.at[k, j] = table_df.at[k, j][0]
-            #here we take the 1st element
+            
+            # #3 elem type chacking
             # number_type = 0
             # date_type = 0
             # string_type = 0
+            # img_type = 0
+            # event_type = 0
+            # url_type = 0
             # for i in range(3):
             #     if isinstance(table_df[col][i], (np.int64,np.float64)):  # Correct way to check type
             #         number_type += 1
-            #         typesList[label].append('int/float')   
+            #         #typesList[label].append('int/float')   
             #     elif isinstance(table_df[col][i], str):  # Correct way to check type     
             #         try:
             #             date = dateutil.parser.parse(table_df[col][i])  # Invalid date string
             #             date_type += 1
-            #             typesList[label].append('date')
+            #             #typesList[label].append('date')
             #         except (ValueError, OverflowError) as e:
-            #             string_type += 1
-            #             typesList[label].append('string')
+            #             #string_type += 1
+            #             parsed = urlparse(table_df[col][i])
+            #             is_url = all([parsed.scheme, parsed.netloc])
+            #             if ".img" in table_df[col][i] and not(is_url):
+            #                 img_type += 1
+            #             if is_url:
+            #                 if "https://schema.org/" in table_df[col][i]:
+            #                     event_type += 1 
+            #                 elif ".img" in table_df[col][i]:
+            #                     img_type += 1
+            #                 else:
+            #                     url_type += 1
+            #             if ".img" not in table_df[col][i] and not(is_url):
+            #                 string_type += 1
+                         
+
+            #             # if table_df[col][i].isdigit():
+            #             #     number_type += 1
+            #             # else:
+            #             #     string_type += 1
+            #             #typesList[label].append('string')
+
+            # type_counts = {
+            #     'int/float': number_type,
+            #     'date': date_type,
+            #     'string': string_type,
+            #     'image': img_type,
+            #     'url': url_type,
+            #     'event': event_type
+            # }
+
+            # # Get the dominant type (with max occurrences)
+            # dominant_type = max(type_counts, key=type_counts.get)
+            # typesList[label].append(dominant_type)
+            
+            # if number_type > date_type and number_type > string_type:
+            #     typesList[label].append('int/float')
+            # elif date_type > number_type and date_type > string_type:
+            #     typesList[label].append('date')
+            # elif string_type > number_type and string_type > date_type:
+            #     typesList[label].append('string')
+
+            
             # print("number_type",number_type)
             # print("date_type",date_type)
             # print("string_type",string_type)
+            #end 3 elem type checking
 
-   
 
+            #here we take the 1st element
+            #print(type(table_df[j][k]))
             if isinstance(table_df[col][0], (np.int64,np.float64)):  # Correct way to check type
                 typesList[label].append('int/float')   
             elif isinstance(table_df[col][0], str):  # Correct way to check type     
@@ -73,6 +133,7 @@ class Preprocess:
                     typesList[label].append('date')
                 except (ValueError, OverflowError) as e:
                     typesList[label].append('string')
+            #end 1st elem
 
 
         # for key in typesList:
@@ -82,29 +143,29 @@ class Preprocess:
         #this is for type clearing
         for key in typesList:
             typesList[key] = {t: typesList[key].count(t) for t in set(typesList[key])}
-        print(typesList)
+        #print(typesList)
 
 
         
         for key, value in typesList.items():
-            print(value)
+            #print(value)
             for sub_key,sub_value in value.items():
                 max_value = max(value.values(), default=-1)
                 # max = -1
                 # if sub_value > max:
                 #     max = sub_value
-            print("-",max_value)
-            threshold = 10/100*max_value
-            print(threshold)
+            #print("-",max_value)
+            threshold = self.droptype_percent/100*max_value
+            #print(threshold)
             keys_to_remove = []
             for sub_key,sub_value in value.items():
                 if sub_value < threshold:
                     keys_to_remove.append(sub_key)
             for sub_key in keys_to_remove:
                 value.pop(sub_key, None)
-                print("------",value)
+                #print("------",value)
 
-        print(typesList)
+        #print(typesList)
 
                 
 

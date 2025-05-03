@@ -74,6 +74,39 @@ class SOTAB_Evaluator:
          You are encouraged to add as many validations as possible
          to provide meaningful feedback to your users
         """
+
+
+    #     #this is for per class calculation scores
+    #     precision, recall, macro_f1, _ = precision_recall_fscore_support(gt_labels, predictions, average='macro')
+    #     micro_f1 = f1_score(gt_labels, predictions, average='micro')
+    #     # Compute per-class scores
+    #     per_class_precision, per_class_recall, per_class_f1, support = precision_recall_fscore_support(
+    #         gt_labels, predictions, average=None, labels=cta_labels
+    #     )
+
+    # # Display per-class F1-scores
+    #     print("\nF1-scores per class:")
+    #     for label, prec, rec, f1 in zip(cta_labels, per_class_precision, per_class_recall, per_class_f1):
+    #         print(f"Class: {label:20} | Precision: {prec:.4f} | Recall: {rec:.4f} | F1-score: {f1:.4f}")
+
+    #     # for label, f1 in zip(cta_labels, per_class_f1):
+    #     #     print(f"Class: {label:20} | F1-score: {f1:.4f}")
+
+    #     res = {
+    #         'macro_f1': macro_f1,
+    #         'micro_f1': micro_f1,
+    #         'precision': precision,
+    #         'recall': recall,
+    #         'per_class_f1': dict(zip(cta_labels, per_class_f1))  # Optional: return as dict
+    #     }
+    #     print(res)
+    #     #end for per class calculation score
+
+
+
+
+
+
         return results
 
 

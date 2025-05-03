@@ -7,13 +7,20 @@ from evaluator import SOTAB_Evaluator
 #from eval import calculate_metrics
 
 
-#These needs to be changed
-DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-SCH-Tables/'  
-GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_validation_round1.csv'
-RELATIONS_FILE = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/cpa_labels_round1.txt'
-#GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/random.csv'
-#GT_PATH = 'data/llm1.csv'
-#GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_test_round1.csv'
+#This is for R2 
+DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/R2/SOTAB-2023-R2-CPA/Round2-SOTAB-CPA-Tables/'  
+RELATIONS_FILE = '/home/kpanag/Desktop/cpa3/cpa/R2/SOTAB-2023-R2-CPA/cpa_labels_round2.txt'
+#GT_PATH = '/home/kpanag/vscode/cpa4/data/test.csv'
+GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/R2/SOTAB-2023-R2-CPA/gt/sotab_cpa_test_round2 (copy).csv'
+#GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/R2/SOTAB-2023-R2-CPA/gt/sotab_cpa_test_round2.csv'
+
+#These needs to be changed this is for R1
+# DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-SCH-Tables/'  
+# #GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_validation_round1.csv'
+# RELATIONS_FILE = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/cpa_labels_round1.txt'
+# #GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/random.csv'
+# #GT_PATH = 'data/llm1.csv'
+# GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_test_round1.csv'
 
 
 
@@ -44,6 +51,7 @@ def read_gt():
     gt['table_name'] = pd.Categorical(gt['table_name'], categories=gt['table_name'].unique(), ordered=True)
     gt_sorted = gt.sort_values(by=['table_name', 'column_index'])
     gt = gt_sorted
+
 
     return gt
 
