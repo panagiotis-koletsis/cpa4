@@ -23,7 +23,7 @@ class Preprocess:
     # GT_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-Datasets/sotab_cpa_train_round1.csv'
     # DATASET_PATH = '/home/kpanag/Desktop/cpa3/cpa/Round1-SOTAB-CPA-SCH-Tables/' 
 
-    droptype_percent = 10
+    droptype_percent = 5
 
 
     def __init__(self):
@@ -56,89 +56,30 @@ class Preprocess:
                     if isinstance(table_df[j][k], list):  # Correct way to check type
                         table_df.at[k, j] = table_df.at[k, j][0]
             
-            # #3 elem type chacking
-            # number_type = 0
-            # date_type = 0
-            # string_type = 0
-            # img_type = 0
-            # event_type = 0
-            # url_type = 0
-            # for i in range(3):
-            #     if isinstance(table_df[col][i], (np.int64,np.float64)):  # Correct way to check type
-            #         number_type += 1
-            #         #typesList[label].append('int/float')   
-            #     elif isinstance(table_df[col][i], str):  # Correct way to check type     
-            #         try:
-            #             date = dateutil.parser.parse(table_df[col][i])  # Invalid date string
-            #             date_type += 1
-            #             #typesList[label].append('date')
-            #         except (ValueError, OverflowError) as e:
-            #             #string_type += 1
-            #             parsed = urlparse(table_df[col][i])
-            #             is_url = all([parsed.scheme, parsed.netloc])
-            #             if ".img" in table_df[col][i] and not(is_url):
-            #                 img_type += 1
-            #             if is_url:
-            #                 if "https://schema.org/" in table_df[col][i]:
-            #                     event_type += 1 
-            #                 elif ".img" in table_df[col][i]:
-            #                     img_type += 1
-            #                 else:
-            #                     url_type += 1
-            #             if ".img" not in table_df[col][i] and not(is_url):
-            #                 string_type += 1
-                         
-
-            #             # if table_df[col][i].isdigit():
-            #             #     number_type += 1
-            #             # else:
-            #             #     string_type += 1
-            #             #typesList[label].append('string')
-
-            # type_counts = {
-            #     'int/float': number_type,
-            #     'date': date_type,
-            #     'string': string_type,
-            #     'image': img_type,
-            #     'url': url_type,
-            #     'event': event_type
-            # }
-
-            # # Get the dominant type (with max occurrences)
-            # dominant_type = max(type_counts, key=type_counts.get)
-            # typesList[label].append(dominant_type)
-            
-            # if number_type > date_type and number_type > string_type:
-            #     typesList[label].append('int/float')
-            # elif date_type > number_type and date_type > string_type:
-            #     typesList[label].append('date')
-            # elif string_type > number_type and string_type > date_type:
-            #     typesList[label].append('string')
-
-            
-            # print("number_type",number_type)
-            # print("date_type",date_type)
-            # print("string_type",string_type)
-            #end 3 elem type checking
-
 
             #here we take the 1st element
             #print(type(table_df[j][k]))
             if isinstance(table_df[col][0], (np.int64,np.float64)):  # Correct way to check type
-                typesList[label].append('int/float')   
+                typesList[label].append('int/float')  
             elif isinstance(table_df[col][0], str):  # Correct way to check type     
                 try:
                     date = dateutil.parser.parse(table_df[col][0])  # Invalid date string
                     #print(table_df[col][0])
                     typesList[label].append('date')
                 except (ValueError, OverflowError) as e:
-                    typesList[label].append('string')
+                    if table_df[col][0].isdigit():
+                        typesList[label].append('int/float')
+                    else:
+                        parsed = urlparse(table_df[col][0])
+                        is_url = all([parsed.scheme, parsed.netloc])
+                        if is_url:
+                            if "https://schema.org/" in table_df[col][0]:
+                                typesList[label].append('url_has_schema')
+                            else:
+                                typesList[label].append('url')
+                        else:
+                            typesList[label].append('string')
             #end 1st elem
-
-
-        # for key in typesList:
-        #     typesList[key] = list(set(typesList[key]))
-
 
         #this is for type clearing
         for key in typesList:
@@ -151,12 +92,7 @@ class Preprocess:
             #print(value)
             for sub_key,sub_value in value.items():
                 max_value = max(value.values(), default=-1)
-                # max = -1
-                # if sub_value > max:
-                #     max = sub_value
-            #print("-",max_value)
             threshold = self.droptype_percent/100*max_value
-            #print(threshold)
             keys_to_remove = []
             for sub_key,sub_value in value.items():
                 if sub_value < threshold:
@@ -164,17 +100,6 @@ class Preprocess:
             for sub_key in keys_to_remove:
                 value.pop(sub_key, None)
                 #print("------",value)
-
-        #print(typesList)
-
-                
-
-
-        
-        
-        #print()
-
-        
 
         inverted_data = {}
 
@@ -184,15 +109,7 @@ class Preprocess:
                     inverted_data[value] = []
                 inverted_data[value].append(key)
 
-        #This is for type clearing
-        # for key, value_dict in typesList.items():
-        #     for value, count in value_dict.items():
-        #         if value not in inverted_data:
-        #             inverted_data[value] = []
-        #         inverted_data[value].append({key: count})
-        # print(inverted_data)
-
-        
+     
         # saving
 
         file_path = 'data/dict1.json'
@@ -273,3 +190,84 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # #3 elem type chacking
+            # detected_type = "none"
+            # none_type = 0
+            # int_type = 0
+            # float_type = 0
+            # date_type = 0
+            # string_type = 0
+            # event_type = 0
+            # url_type = 0
+            # for i in range(3):
+            #     if table_df[col][i] is None:  # Correct way to check type
+            #         none_type += 1
+            #     if isinstance(table_df[col][i], np.int64):  # Correct way to check type
+            #         int_type += 1
+            #     if isinstance(table_df[col][i], np.float64):  # Correct way to check type
+            #         float_type += 1
+            #         #typesList[label].append('int/float')   
+            #     elif isinstance(table_df[col][i], str):  # Correct way to check type     
+
+            #         try:
+            #             date = dateutil.parser.parse(table_df[col][i])  # Invalid date string
+            #             date_type += 1
+            #             #typesList[label].append('date')
+            #         except (ValueError, OverflowError) as e:
+            #             try:
+            #                 parsed = urlparse(table_df[col][i].strip())
+            #                 is_url = all([parsed.scheme, parsed.netloc])
+            #             except (ValueError, OverflowError):
+            #                 is_url = False
+
+            #             # # Try URL parsing
+            #             # parsed = urlparse(table_df[col][i].strip())
+            #             # is_url = all([parsed.scheme, parsed.netloc])
+            #             if is_url:
+            #                 if "https://schema.org/" in table_df[col][i]:
+            #                     event_type += 1
+            #                 else:
+            #                     url_type += 1
+            #             else:
+            #                 string_type += 1
+
+                        
+
+            # type_counts = {
+            #     'none': none_type,
+            #     'int': int_type,
+            #     'float': float_type,
+            #     'date': date_type,
+            #     'string': string_type,
+            #     'url': url_type,
+            #     'url_has_schema': event_type
+            # }
+
+            # # Get the dominant type (with max occurrences)
+            # dominant_type = max(type_counts, key=type_counts.get)
+            # typesList[label].append(dominant_type)
+        
+
+            
+            # # print("number_type",number_type)
+            # # print("date_type",date_type)
+            # # print("string_type",string_type)
+            # # #end 3 elem type checking     

@@ -1,7 +1,0 @@
-table_name,main_column_index,column_index,label
-LocalBusiness_bbd.ca_September2020_CPA.json.gz,0,9,currenciesAccepted
-LocalBusiness_bbd.ca_September2020_CPA.json.gz,0,5,paymentAccepted
-LocalBusiness_bbd.ca_September2020_CPA.json.gz,0,4,openingHours
-LocalBusiness_bestcricketstore.com_September2020_CPA.json.gz,0,6,opens
-LocalBusiness_bestcricketstore.com_September2020_CPA.json.gz,0,7,closes
-LocalBusiness_bestcricketstore.com_September2020_CPA.json.gz,0,5,dayOfWeek

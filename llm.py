@@ -5,6 +5,8 @@ from files import llm_csv
 import numpy as np
 import dateutil.parser
 import re
+from urllib.parse import urlparse
+from files import desc_file
 
 #"qwen2.5:14b"   "qwen2.5:32b-instruct-q3_K_L"   qwen2.5:72b-instruct-q2_K        qwen3:14b
 model = "qwen2.5:32b-instruct-q3_K_L"
@@ -13,40 +15,39 @@ def llm(index, gt, domains, types, coapperances , rels):
     used = []
     first_name = gt['table_name'][0]
     first_iter = True
+    #for r2
+    #first_rels_to_coapp = ["isbn", "genre", "email", "review", "itemCondition", "currenciesAccepted", "amenityFeature", "datePosted", "director", "contentRating", "countryOfOrigin", "numTracks", "nationality", "color", "releaseDate", "recipeIngredient", "recipeInstructions", "cookingMethod", "servesCuisine"]
+    #first_rels_to_coapp = ["inLanguage", "availability", "isbn", "bookFormat", "numberOfPages", "copyrightYear", "review", "image", "email", "priceRange", "addressCountry", "postalCode", "currenciesAccepted", "paymentAccepted", "amenityFeature", "availableLanguage", "faxNumber", "dayOfWeek", "contentRating", "countryOfOrigin", "numTracks", "nationality", "birthPlace", "honorificSuffix", "gender", "measurements", "color", "releaseDate", "recipeInstructions", "cookingMethod", "servesCuisine"]
+    
+    #for r1
+    first_rels_to_coapp = ["image", "numberOfPages", "inLanguage", "author", "publisher", "genre", "endDate", "email", "priceRange", "streetAddress", "faxNumber", "contentRating", "byArtist", "inAlbum", "gender", "releaseDate"]
+    first_rel = ""
 
 
 
     for i in range(len(gt)):
         print(i)
-        #print(index)
         table_name = gt['table_name'][i]
         domain = table_name.split('_')[0]
-        #print(type(domain))
         num =  gt['column_index'][i]
-        #print(num)
-        # print(domain)
-        # print(table_name)
-        # print(index[table_name])
-
-
-        #cta = gt['labelcol'][i]
-
-
 
         table = index[table_name]
         if len(table) > 500:
             table = table.iloc[:500]
-        
-        #print(table.to_json(orient="records"))
-        
 
         #domains && types
-        #rels = dom_types(table,domain,domains,num,types,rels)
+        rels = dom_types(table,domain,domains,num,types,rels)
+
+        # #add description part
+        # desc_dict = desc_file()
+        # filtered_descriptions = {key: desc_dict[key] for key in rels if key in desc_dict}
+        #end add descr
 
         
         # co-appearance
         # if not first_iter:
-        #     rels = get_coappearance(first_iter,used,coapperances,domain,rels)
+        #     if first_rel in first_rels_to_coapp:
+        #         rels = get_coappearance(first_iter,used,coapperances,domain,rels,first_rel)
         
         if len(rels) == 1:
             print("Only 1 relation")
@@ -54,12 +55,6 @@ def llm(index, gt, domains, types, coapperances , rels):
 
         table = table.to_json(orient="records")
         prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
-
-        #print(f"Domain: {domain}, Num: {num}, Table: {table}, Relations: {rels}")
-
-        #domain=domain,num=num,table=table,relations=rels
-
-        #,cta=cta
 
         prompt = prompt_template.format(domain=domain,num=num,table=table,relations=rels)
         #print(prompt)
@@ -78,7 +73,7 @@ def llm(index, gt, domains, types, coapperances , rels):
 
         #This is for structuring
         tr = 0
-        while (res not in rels) and tr < 2:
+        while (res not in rels) and tr < 2 :
             #print(res)
             #print('----trying again')
             res = llm_structuring(res)
@@ -88,7 +83,9 @@ def llm(index, gt, domains, types, coapperances , rels):
             tr +=1
         if res not in rels:
             print("---res out", res)
-        
+
+        if first_iter == True:
+            first_rel = res
         #This is for co-App
         if first_name == table_name:
             first_iter = False
@@ -119,7 +116,7 @@ def dom_types(table,domain,domains,num,types,rels):
     #---Keep only this for types and domain
     rels_dom = domains[domain]
     type  = get_type(table,num)
-    if type == 'int/float' or type == 'string' or type == 'date':
+    if type == 'int/float' or type == 'string' or type == 'date' :
         rels_type = types[type]
         #print("---",rels_type)
         intersection = list(set(rels_dom).intersection(set(rels_type)))
@@ -144,22 +141,13 @@ def dom_types(table,domain,domains,num,types,rels):
 
 def get_type(table,num):
     detected_type = "None"
-    
     el = table[num][0]
-    #print(el)
-    #print(type(el))
-    if isinstance(el, list):  # Correct way to check type
-        #i added this for fixing error with list of lists
-        #print(el[0])
+    if isinstance(el, list):  
         if isinstance(el[0], list):
             table.loc[0, num] = el[0][0]
         #print(element)
         else:
-        #---
             table.loc[0,num] = table.loc[0,num][0]
-  
-        #table[num][0] = table[num][0][0]
-        #print(table[num][0])
     element = table[num][0]
     if isinstance(element, (np.int64,np.float64)):  # Correct way to check type
         detected_type = "int/float"  
@@ -168,110 +156,35 @@ def get_type(table,num):
             date = dateutil.parser.parse(element)  # Invalid date string
             detected_type = "date"
         except (ValueError, OverflowError) as e:
-            detected_type = "string"
-    #print(f"type {type}, element {element}")
-    #print(detected_type)
+            if element.isdigit():
+                detected_type ="int/float"
+            else:    
+                parsed = urlparse(element)
+                is_url = all([parsed.scheme, parsed.netloc])
+                if is_url:
+                    if "https://schema.org/" in element:
+                        detected_type ="url_has_schema"
+                    else:
+                        detected_type ="url"
+                else:              
+                    detected_type = "string"
     return detected_type
 
 
 
-    # detected_type = "None"
-    # number_type = 0
-    # date_type = 0
-    # string_type = 0
-
-    # for i in range(3):
-    #     value = table.loc[i, num]  # safer to read once
-
-    #     # Handle list or nested list cases
-    #     if isinstance(value, list):
-    #         while isinstance(value, list):
-    #             if len(value) == 0:
-    #                 value = ""  # fallback for empty lists
-    #                 break
-    #             value = value[0]
-    #         table.loc[i, num] = value  # overwrite cleaned value
-
-    #     # Type detection
-    #     if isinstance(value, (np.int64, np.float64, int, float)):
-    #         number_type += 1
-    #     elif isinstance(value, str):
-    #         try:
-    #             date = dateutil.parser.parse(value)
-    #             date_type += 1
-    #         except (ValueError, OverflowError):
-    #             # if value.isdigit():
-    #             #     number_type += 1
-    #             # else:
-    #             #     string_type += 1
-    #             string_type += 1
-                
-
-    # # Decide majority type
-    # if number_type > date_type and number_type > string_type:
-    #     detected_type = "int/float"
-    # elif date_type > number_type and date_type > string_type:
-    #     detected_type = "date"
-    # elif string_type > number_type and string_type > date_type:
-    #     detected_type = 'string'
-
-    # return detected_type
-
-
-    # detected_type = "None"
-    # number_type = 0
-    # date_type = 0
-    # string_type = 0
-    # el = table[num]
-    # for i in range(3):
-    #     el = 
-    #     if isinstance(el[i], list):  # Correct way to check type
-    #     #i added this for fixing error with list of lists
-    #     #print(el[0])
-    #         if isinstance(el[i][0], list):
-    #             table.loc[0, num] = table.loc[0, num][0]
-    #     #print(element)
-    #     else:
-    #     #---
-    #         table.loc[0,num] = table.loc[0,num][0]
-    #     if isinstance(table[num][i], (np.int64,np.float64)):  # Correct way to check type
-    #         number_type += 1
-    #         #typesList[label].append('int/float')   
-    #     elif isinstance(table[num][i], str):  # Correct way to check type     
-    #         try:
-    #             date = dateutil.parser.parse(table[num][i])  # Invalid date string
-    #             date_type += 1
-    #             #typesList[label].append('date')
-    #         except (ValueError, OverflowError) as e:
-    #             string_type += 1
-    #             #typesList[label].append('string')
-    
-    # if number_type > date_type and number_type > string_type:
-    #     detected_type = "int/float"
-    # elif date_type > number_type and date_type > string_type:
-    #     detected_type = "date"
-    # elif string_type > number_type and string_type > date_type:
-    #     detected_type = 'string'
-    # return detected_type
-
-
-def get_coappearance(first_iter,used,coapperances,domain,rels):
+def get_coappearance(first_iter,used,coapperances,domain,rels,first_rel):
     #remove already chooses relations
-    # print("-rels",rels)
-    # print("--used",used)
     new_rels = [item for item in rels if item not in used]
-    #print("---newrels",new_rels)
     rels = new_rels
 
     #coappearance 
     if len(used) != 0: 
-        first_item =  used[0]
+        #first_item =  used[0]
+        first_item = first_rel
         try:
             coapp = coapperances[domain][first_item]
         except KeyError:
             coapp = rels
-        # print("-coapp",coapp)
-        # print("--rels",rels)
 
         intersection = list(set(rels).intersection(set(coapp)))
 
@@ -294,3 +207,69 @@ def llm_structuring(res):
     return res
 
 
+
+
+
+
+# this is for get_type it was tested a majority vote based on the 3 first cells but decreased performance...
+# detected_type = "none"
+# none_type = 0
+# int_type = 0
+# float_type = 0
+# date_type = 0
+# string_type = 0
+# event_type = 0
+# url_type = 0
+
+# for i in range(3):
+#     value = table.loc[i, num]  # safer to read once
+
+#     # Handle list or nested list cases
+#     if isinstance(value, list):
+#         while isinstance(value, list):
+#             if len(value) == 0:
+#                 value = ""  # fallback for empty lists
+#                 break
+#             value = value[0]
+#         table.loc[i, num] = value  # overwrite cleaned value
+
+#     if value is None:  # Correct way to check type
+#         none_type += 1
+#     # Type detection
+#     if isinstance(value, (np.int64)):
+#         int_type += 1
+#     elif isinstance(value, (np.float64)):
+#         float_type += 1
+#     elif isinstance(value, str):
+#         try:
+#             date = dateutil.parser.parse(value)
+#             date_type += 1
+#         except (ValueError, OverflowError):
+#             try:
+#                 parsed = urlparse(value.strip())
+#                 is_url = all([parsed.scheme, parsed.netloc])
+#             except (ValueError, OverflowError):
+#                 is_url = False
+
+#             if is_url:
+#                 if "https://schema.org/" in value:
+#                     event_type += 1
+#                 else:
+#                     url_type += 1
+#             else:
+#                 string_type += 1
+
+# type_counts = {
+#             'none': none_type,
+#             'int': int_type,
+#             'float': float_type,
+#             'date': date_type,
+#             'string': string_type,
+#             'url': url_type,
+#             'url_has_schema': event_type
+#         }
+
+# detected_type = max(type_counts, key=type_counts.get)
+# #print(detected_type)
+
+# return detected_type
